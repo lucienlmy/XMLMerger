@@ -1,7 +1,22 @@
+import struct
 from xml.etree import ElementTree
 from typing import List, Optional
 from dataclasses import dataclass
 from enum import Enum
+
+
+_F32 = struct.Struct('f')
+
+
+def values_equal(a: Optional[str], b: Optional[str]) -> bool:
+    if a == b:
+        return True
+    if a is None or b is None:
+        return False
+    try:
+        return _F32.pack(float(a)) == _F32.pack(float(b))
+    except (ValueError, OverflowError):
+        return False
 
 
 class ChangeType(Enum):
@@ -77,7 +92,7 @@ class ChangeDetector:
             orig_value = orig_attribs.get(attr_name)
             mod_value = mod_attribs.get(attr_name)
             
-            if orig_value != mod_value:
+            if not values_equal(orig_value, mod_value):
                 changes.append(Change(
                     change_type=ChangeType.MODIFY,
                     element_path=path,
@@ -92,7 +107,7 @@ class ChangeDetector:
         orig_text = (orig_elem.text or "").strip()
         mod_text = (mod_elem.text or "").strip()
         
-        if orig_text != mod_text:
+        if not values_equal(orig_text, mod_text):
             changes.append(Change(
                 change_type=ChangeType.MODIFY,
                 element_path=path,

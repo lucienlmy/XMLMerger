@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 import copy
 
-from .change_detector import Change, ChangeSet, ChangeType
+from .change_detector import Change, ChangeSet, ChangeType, values_equal
 from .ymap_handler import YmapHandler
 
 
@@ -269,8 +269,8 @@ class MergeEngine:
                     values[mod_name] = change.new_value
                 
                 # If all values are the same, it's not a conflict
-                unique_values = set(values.values())
-                if len(unique_values) > 1:
+                first = next(iter(values.values()))
+                if not all(values_equal(first, v) for v in values.values()):
                     conflicts.append(Conflict(
                         element_path=element_path,
                         element_id=element_id,
